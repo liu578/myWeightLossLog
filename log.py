@@ -7,26 +7,12 @@ from scipy.optimize import root_scalar
 # 设置暗色主题
 plt.style.use('dark_background')
 plt.rcParams['font.sans-serif'] = ['Heiti TC']
-# start_date = datetime.now() - timedelta(days=datetime.now().weekday())
-start_date = datetime(2025, 3, 24) # 开始日期, 2025年3月24日
+start_date = datetime.now() - timedelta(days=datetime.now().weekday())
 
 # === 用户输入部分 ===
 height = 172  # 身高
 start_weight = 90  # 当前体重
-normal_weight = 73.7 # 正常体重的上限
-target_weight = 62.1  # 最终目标体重, 建议根据bmi来计算，这里我取bmi21，我的身高的最佳体重就是62.1
-weekly_percent = 0.01  # 每周减去当前体重的1%，一个月/4周的减重应该控制在总体重的5%以内，减的过快会造成皮肤松弛，不可逆！！！
-weekly_percent_upper_limit = 0.012 #上限设置在1.2%
-# 计算达到目标体重所需的周数
-def calculate_weeks_needed(start, target, percent):
-    weeks = 0
-    current = start
-    while current > target:
-        current = current * (1 - percent)
-        weeks += 1
-    return weeks
-
-total_weeks = calculate_weeks_needed(start_weight, target_weight, weekly_percent)
+start_date = datetime(2025, 3, 24) # 开始日期, 2025年3月24日, optional
 
 # ✅ 手动填写你的实际体重（每周更新一个）
 # 示例：actual_weights = [89.2, 88.3, 87.9]  # 前三周的体重
@@ -63,14 +49,37 @@ actual_weights = [
     # 64, # 第三十周周末的体重
 ]
 # === end of user input ===
-
 # 输入验证
-if target_weight >= start_weight:
-    raise ValueError("目标体重必须小于起始体重")
 if height <= 0:
     raise ValueError("身高必须为正数")
 
-total_loss = start_weight - target_weight
+def calculate_target_weight(bmi: float, height_cm: float) -> float:
+    """
+    根据 BMI 和 身高（厘米）计算体重（kg）
+    :param bmi: 目标 BMI 值（例如 24.9）
+    :param height_cm: 身高（单位：厘米）
+    :return: 对应的体重（单位：kg）
+    """
+    height_m = height_cm / 100  # 转换为米
+    weight = bmi * (height_m ** 2)
+    return round(weight, 2)
+
+# 计算达到目标体重所需的周数
+def calculate_weeks_needed(start, target, percent):
+    weeks = 0
+    current = start
+    while current > target:
+        current = current * (1 - percent)
+        weeks += 1
+    return weeks
+
+normal_weight = calculate_target_weight(24.9, height)
+target_weight = calculate_target_weight(21, height)
+
+weekly_percent = 0.0075  # 每周减去当前体重的0.5%-1%，一个月/4周的减重应该控制在总体重的5%以内，减的过快会造成皮肤松弛，不可逆！！！
+weekly_percent_upper_limit = 0.0125 #上限设置在1.25%
+
+total_weeks = calculate_weeks_needed(start_weight, target_weight, weekly_percent)
 
 # 构造计划体重表
 weeks = []
@@ -111,6 +120,8 @@ weekly_contributions = []
 
 for i, row in df.iterrows():
     y = row["实际体重"]
+    e = row["计划体重"]
+
     if pd.notna(y):
         total_count += 1
         # 获取上周的实际体重
@@ -119,7 +130,8 @@ for i, row in df.iterrows():
             # 计算实际减重比例
             actual_loss_percent = (prev_weight - y) / prev_weight
             # 判断是否达标（是否减重超过1%）
-            if actual_loss_percent >= weekly_percent and actual_loss_percent <= weekly_percent_upper_limit:
+            # 实际体重低于目标体重，且减重比例不超过weekly_percent_upper_limit
+            if y < e and actual_loss_percent <= weekly_percent_upper_limit:
                 success_count += 1
                 weekly_contributions.append('o')  # 达标，正贡献
             elif actual_loss_percent > weekly_percent_upper_limit:
@@ -128,7 +140,7 @@ for i, row in df.iterrows():
                 weekly_contributions.append('v')  # 未达标，负贡献
         else:
             # 第一周特殊处理
-            if (start_weight - y) / start_weight >= weekly_percent and (start_weight - y) / start_weight <= weekly_percent_upper_limit:
+            if y < e :
                 success_count += 1
                 weekly_contributions.append('o')
             else:
@@ -189,6 +201,10 @@ for i, row in df.iterrows():
             ax1.text(row["终止日"], y - 2, f"{y}",  # 向下偏移2个单位
                     ha='center', fontsize=9, color='#FF6B6B')
 
+# 在绘制体重变化之后，添加正常体重的水平线
+ax1.axhline(y=normal_weight, color='#228B22', linestyle='-', linewidth=2, alpha=0.5, label='正常上限')
+ax1.text(df["终止日"].iloc[0], normal_weight + 0.3, f'{normal_weight}kg', color='grey', ha='left', va='bottom', alpha=0.5)              
+
 # 设置Y轴刻度
 min_weight = target_weight // 10 * 10  # 下限为目标体重向下取整到10的倍数
 max_weight = start_weight // 10 * 10 + 5  # 上限为起始体重向上取整到10的倍数
@@ -199,7 +215,7 @@ rate_range = 40  # 达成率占用40kg的显示范围
 # 绘制达成率
 negative_rates = [min_weight - (rate_range * (100-r)/100) if r is not None else None for r in cumulative_rates]
 # ax1.plot(df["终止日"], negative_rates, label="达成率", color="#98FB98", linewidth=2, marker='^')  # 淡绿色
-line_rate = ax1.plot(df["终止日"], negative_rates, label="达成率", color="#2E8B57", linewidth=2, marker='^')
+line_rate = ax1.plot(df["终止日"], negative_rates, label="合理速率", color="#2E8B57", linewidth=2, marker='^')
 
 # 在达成率点上添加正负贡献标记
 for i, (x, y, contrib) in enumerate(zip(df["终止日"], negative_rates, weekly_contributions)):
