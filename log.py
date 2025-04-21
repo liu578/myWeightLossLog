@@ -7,12 +7,12 @@ from scipy.optimize import root_scalar
 # 设置暗色主题
 plt.style.use('dark_background')
 plt.rcParams['font.sans-serif'] = ['Heiti TC']
-start_date = datetime.now() - timedelta(days=datetime.now().weekday())
+start_date = datetime(2025, 3, 24) # 开始日期, 2025年3月24日, optional
 
 # === 用户输入部分 ===
 height = 172  # 身高
 start_weight = 90  # 当前体重
-start_date = datetime(2025, 3, 24) # 开始日期, 2025年3月24日, optional
+# start_date = datetime.now() - timedelta(days=datetime.now().weekday()) # 自动获取当前日期
 
 # ✅ 手动填写你的实际体重（每周更新一个）
 # 示例：actual_weights = [89.2, 88.3, 87.9]  # 前三周的体重
@@ -21,7 +21,7 @@ actual_weights = [
     87.1, # 第二周周末的体重
     85.2, # 第三周周末的体重
     83.8, # 第四周周末的体重
-    # 87.1, # 第五周周末的体重
+    # 86.6, # 第五周周末的体重
     # 86.7, # 第六周周末的体重
     # 86.3, # 第七周周末的体重
     # 85.9, # 第八周周末的体重
@@ -121,7 +121,7 @@ weekly_contributions = []
 for i, row in df.iterrows():
     y = row["实际体重"]
     e = row["计划体重"]
-
+    # print(f"第{i+1}周: 实际体重: {y}, 计划体重: {e}")
     if pd.notna(y):
         total_count += 1
         # 获取上周的实际体重
@@ -182,7 +182,7 @@ for i, row in df.iterrows():
     ax1.text(row["终止日"], plan_weight + 0.3,  # 向上偏移0.3个单位
              f'{plan_weight}',
              color='#FFA07A',  # 与预期线相同的颜色
-             ha='right',       # 右对齐
+             ha='left',       # 左对齐
              va='bottom',      # 底部对齐
              fontsize=8,       # 稍微小一点的字体
              rotation=45)      # 文字旋转45度，节省水平空间
@@ -192,14 +192,9 @@ for i, row in df.iterrows():
     y = row["实际体重"]
     target = row["计划体重"]
     if pd.notna(y):
-        if y <= target:
-            ax1.plot(row["终止日"], y, 'o', color='#87CEEB', markersize=8)
-            ax1.text(row["终止日"], y - 2, f"{y}",  # 向下偏移2个单位
-                    ha='center', fontsize=9, color='#87CEEB')
-        else:
-            ax1.plot(row["终止日"], y, 'o', color='#87CEEB', markersize=8)
-            ax1.text(row["终止日"], y - 2, f"{y}",  # 向下偏移2个单位
-                    ha='center', fontsize=9, color='#FF6B6B')
+        ax1.plot(row["终止日"], y, 'o', color='#87CEEB', markersize=8)
+        ax1.text(row["终止日"], y - 2, f"{y}",  # 向下偏移2个单位
+                ha='center', fontsize=9, color= '#87CEEB' if y < target else '#FF6B6B')
 
 # 在绘制体重变化之后，添加正常体重的水平线
 ax1.axhline(y=normal_weight, color='#228B22', linestyle='-', linewidth=2, alpha=0.5, label='正常上限')
