@@ -21,8 +21,8 @@ actual_weights = [
     87.1, # 第二周周末的体重
     85.2, # 第三周周末的体重
     83.8, # 第四周周末的体重
-    # 86.6, # 第五周周末的体重
-    # 86.7, # 第六周周末的体重
+    83.2, # 第五周周末的体重
+    82.6, # 第六周周末的体重
     # 86.3, # 第七周周末的体重
     # 85.9, # 第八周周末的体重
     # 85.5, # 第九周周末的体重
@@ -198,7 +198,7 @@ for i, row in df.iterrows():
 
 # 在绘制体重变化之后，添加正常体重的水平线
 ax1.axhline(y=normal_weight, color='#228B22', linestyle='-', linewidth=2, alpha=0.5, label='正常上限')
-ax1.text(df["终止日"].iloc[0], normal_weight + 0.3, f'{normal_weight}kg', color='grey', ha='left', va='bottom', alpha=0.5)              
+ax1.text(df["终止日"].iloc[0], normal_weight + 0.3, f'{normal_weight}', color='grey', ha='left', va='bottom', alpha=0.5)              
 
 # 设置Y轴刻度
 min_weight = target_weight // 10 * 10  # 下限为目标体重向下取整到10的倍数
@@ -210,7 +210,7 @@ rate_range = 40  # 达成率占用40kg的显示范围
 # 绘制达成率
 negative_rates = [min_weight - (rate_range * (100-r)/100) if r is not None else None for r in cumulative_rates]
 # ax1.plot(df["终止日"], negative_rates, label="达成率", color="#98FB98", linewidth=2, marker='^')  # 淡绿色
-line_rate = ax1.plot(df["终止日"], negative_rates, label="合理速率", color="#2E8B57", linewidth=2, marker='^')
+line_rate = ax1.plot(df["终止日"], negative_rates, label="完成度", color="#2E8B57", linewidth=2, marker='^')
 
 # 在达成率点上添加正负贡献标记
 for i, (x, y, contrib) in enumerate(zip(df["终止日"], negative_rates, weekly_contributions)):
