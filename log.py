@@ -89,19 +89,24 @@ current_weight = start_weight
 for week in range(total_weeks):
     # 计算本周应该减去的重量
     weekly_loss = current_weight * weekly_percent  # 每周减去当前体重的1%
-    
     current_weight -= weekly_loss
+    try:
+        actual_loss = actual_weights[week-1] - actual_weights[week]
+    except:
+        actual_loss = None
+
     week_start = start_date + timedelta(weeks=week_index)
     week_end = week_start + timedelta(days=6)
     weeks.append({
         "第几周": week_index + 1,
         "终止日": week_end.strftime("%m-%d"),
         "计划体重": round(current_weight, 1),
-        # "周减重": round(weekly_loss, 2)
+        "周实际减重": round(actual_loss, 2) if actual_loss is not None else None
     })
     week_index += 1
 
-print(weeks)
+
+print([f"{week['第几周']} {week['周实际减重']}" for week in weeks if week['第几周'] > 1 and week['周实际减重'] is not None])
 
 df = pd.DataFrame(weeks)
 
