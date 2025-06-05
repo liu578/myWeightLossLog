@@ -23,10 +23,10 @@ actual_weights = [
     83.8, # 第四周周末的体重
     83.2, # 第五周周末的体重
     82.6, # 第六周周末的体重
-    # 86.3, # 第七周周末的体重
-    # 85.9, # 第八周周末的体重
-    # 85.5, # 第九周周末的体重
-    # 85.1, # 第十周周末的体重
+    80.1, # 第七周周末的体重
+    78.6, # 第八周周末的体重
+    79.1, # 第九周周末的体重
+    77.3, # 第十周周末的体重
     # 84.7, # 第十一周周末的体重
     # 84.3, # 第十二周周末的体重
     # 83.9, # 第十三周周末的体重
@@ -201,9 +201,9 @@ for i, row in df.iterrows():
         ax1.text(row["终止日"], y - 2, f"{y}",  # 向下偏移2个单位
                 ha='center', fontsize=9, color= '#87CEEB' if y < target else '#FF6B6B')
 
-# 在绘制体重变化之后，添加正常体重的水平线
-ax1.axhline(y=normal_weight, color='#228B22', linestyle='-', linewidth=2, alpha=0.5, label='正常上限')
-ax1.text(df["终止日"].iloc[0], normal_weight + 0.3, f'{normal_weight}', color='grey', ha='left', va='bottom', alpha=0.5)              
+# 在绘制体重变化之后，添加目标体重的水平线
+ax1.axhline(y=target_weight, color='#228B22', linestyle='-', linewidth=2, alpha=0.5, label='理想体重')
+ax1.text(df["终止日"].iloc[0], target_weight + 0.3, f'{target_weight}', color='grey', ha='left', va='bottom', alpha=0.5)              
 
 # 设置Y轴刻度
 min_weight = target_weight // 10 * 10  # 下限为目标体重向下取整到10的倍数
